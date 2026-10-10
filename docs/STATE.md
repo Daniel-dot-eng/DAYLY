@@ -2,16 +2,16 @@
 
 Codex keeps this file current after every task. The PM and the orchestrator read it to see progress.
 
-**Current batch:** not started
+**Current batch:** A
 **Current checkpoint:** none
-**Last updated:** never
+**Last updated:** 2026-10-10
 **Branch:** mvp0
 
 ## Task table
 
 | ID | Task | Status | Date | Notes and deviations |
 |---|---|---|---|---|
-| K0 | Read docs, check access, write plan | Todo | | |
+| K0 | Read docs, check access, write plan | Done | 2026-10-10 | Read all reference documents; local-only policy committed first. |
 | M1-01 | Skeleton, Compose, health endpoint, deploy pipeline | Todo | | |
 | M1-02 | Schema, migrations, RLS, withTenant | Todo | | |
 | M1-03 | Auth, sign-up, invites, technician join | Todo | | |
@@ -27,7 +27,14 @@ Status values: Todo, Doing, Review, Done, Blocked, Cut.
 
 ## Build plan
 
-(Codex writes its plan and assumptions here during K0.)
+1. M1-01: npm workspace scaffold, local health page, isolated Compose and CI/deploy scripts.
+2. M1-02: PostgreSQL 16 migrations, separate runtime/owner roles, forced tenant RLS and transaction helper.
+3. M1-03: timeboxed Better Auth spike, admin company/session flow and atomic technician invites.
+4. M1-04: scoped setup CRUD and matching admin screens; local-only demo seed.
+5. M1-05: endpoint coverage and real-database leak checks, including a deliberate policy-break negative control.
+6. Verify typecheck, tests, leak checks and build; write PR_C1.md and stop at C1. Commit every task locally; never push.
+
+Assumptions: design frontmatter tokens are canonical where prose differs; production secrets and VM execution remain PM-owned. Docker daemon is unavailable locally; use native PostgreSQL 16 for database tests and explicitly report untested Compose execution.
 
 ## Decisions made during the build
 
