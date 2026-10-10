@@ -1,0 +1,42 @@
+name: DAYLY checks and deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy only DAYLY
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_HOST_KEY: ${{ secrets.VM_HOST_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$RUNNER_TEMP/dayly-ssh"
+          printf '%s\n' "$VM_SSH_KEY" > "$RUNNER_TEMP/dayly-ssh/key"
+          printf '%s\n' "$VM_HOST_KEY" > "$RUNNER_TEMP/dayly-ssh/known_hosts"
+          chmod 600 "$RUNNER_TEMP/dayly-ssh/key"
+          export RSYNC_RSH="ssh -i $RUNNER_TEMP/dayly-ssh/key -o UserKnownHostsFile=$RUNNER_TEMP/dayly-ssh/known_hosts -o StrictHostKeyChecking=yes"
+          rsync -az --exclude=.git --exclude=node_modules --exclude=.env --exclude=data ./ "$VM_USER@$VM_HOST:/srv/dayly/app/"
+          ssh -i "$RUNNER_TEMP/dayly-ssh/key" -o UserKnownHostsFile="$RUNNER_TEMP/dayly-ssh/known_hosts" -o StrictHostKeyChecking=yes "$VM_USER@$VM_HOST" 'bash /srv/dayly/app/scripts/deploy.sh'

@@ -12,7 +12,7 @@ Codex keeps this file current after every task. The PM and the orchestrator read
 | ID | Task | Status | Date | Notes and deviations |
 |---|---|---|---|---|
 | K0 | Read docs, check access, write plan | Done | 2026-10-10 | Read all reference documents; local-only policy committed first. |
-| M1-01 | Skeleton, Compose, health endpoint, deploy pipeline | Todo | | |
+| M1-01 | Skeleton, Compose, health endpoint, deploy pipeline | Review | 2026-10-10 | Scaffold, health contract/test, bundled fonts, isolated Compose and deploy CI created. Native Node 22 installed; Docker daemon unavailable, so live Caddy/Compose acceptance remains unverified. |
 | M1-02 | Schema, migrations, RLS, withTenant | Todo | | |
 | M1-03 | Auth, sign-up, invites, technician join | Todo | | |
 | M1-04 | Admin setup API and screens, demo seed | Todo | | |

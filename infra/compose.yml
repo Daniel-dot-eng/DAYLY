@@ -1,0 +1,51 @@
+name: dayly
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: dayly
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    volumes:
+      - ${DATA_DIR:-../data}/pgdata:/var/lib/postgresql/data
+      - ${DATA_DIR:-../data}/backups:/backups
+    restart: unless-stopped
+    mem_limit: 3g
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d dayly]
+      interval: 5s
+      retries: 20
+    networks: [dayly]
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    environment:
+      NODE_ENV: production
+      APP_VERSION: ${APP_VERSION:-0.0.1}
+    depends_on:
+      postgres: {condition: service_healthy}
+    volumes:
+      - ${DATA_DIR:-../data}/files:/files
+    restart: unless-stopped
+    mem_limit: 1g
+    networks: [dayly]
+  caddy:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - ${CADDY_HTTP_PORT:-80}:80
+      - ${CADDY_HTTPS_PORT:-443}:443
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    mem_limit: 256m
+    networks: [dayly]
+networks:
+  dayly: {}
+volumes:
+  caddy_data: {}
+  caddy_config: {}
