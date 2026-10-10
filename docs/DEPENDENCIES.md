@@ -1,6 +1,9 @@
 # Dependencies
  
 - Drizzle ORM / pg / pg types: parameterized PostgreSQL transactions and migrations.
+- Argon2 native bindings: Argon2id password hashing; Better Auth removed after bounded contract spike.
+- Fastify cookie / rate-limit plugins: server-session cookie transport and auth attempt limits.
+- React Router / TanStack Query: route transitions and deduplicated server-state fetching.
 
 - Fastify: HTTP routing, bounded request bodies and injection tests.
 - Zod: shared input/output and startup configuration validation.
