@@ -1,4 +1,6 @@
 # Dependencies
+ 
+- Drizzle ORM / pg / pg types: parameterized PostgreSQL transactions and migrations.
 
 - Fastify: HTTP routing, bounded request bodies and injection tests.
 - Zod: shared input/output and startup configuration validation.

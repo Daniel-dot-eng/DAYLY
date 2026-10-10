@@ -5,9 +5,12 @@ services:
     environment:
       POSTGRES_DB: dayly
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      DAYLY_OWNER_PASSWORD: ${DAYLY_OWNER_PASSWORD:?required}
+      DAYLY_APP_PASSWORD: ${DAYLY_APP_PASSWORD:?required}
     volumes:
       - ${DATA_DIR:-../data}/pgdata:/var/lib/postgresql/data
       - ${DATA_DIR:-../data}/backups:/backups
+      - ./init-roles.sh:/docker-entrypoint-initdb.d/init-roles.sh:ro
     restart: unless-stopped
     mem_limit: 3g
     healthcheck:
@@ -22,6 +25,8 @@ services:
     environment:
       NODE_ENV: production
       APP_VERSION: ${APP_VERSION:-0.0.1}
+      DATABASE_URL: ${DATABASE_URL:?required}
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:?required}
     depends_on:
       postgres: {condition: service_healthy}
     volumes:

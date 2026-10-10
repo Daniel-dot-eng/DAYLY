@@ -1,0 +1,29 @@
+CREATE TABLE companies (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, code text NOT NULL UNIQUE, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, login text NOT NULL UNIQUE, password_hash text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), company_id uuid NOT NULL REFERENCES companies(id), user_id uuid NOT NULL REFERENCES users(id), role text NOT NULL CHECK(role IN ('admin','technician')), UNIQUE(user_id,company_id));
+CREATE TABLE sessions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), token_hash text NOT NULL UNIQUE, user_id uuid NOT NULL REFERENCES users(id), company_id uuid NOT NULL REFERENCES companies(id), expires_at timestamptz NOT NULL);
+CREATE TABLE departments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), name text NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id));
+CREATE TABLE sections (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), department_id uuid NOT NULL, name text NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), FOREIGN KEY(tenant_id,department_id) REFERENCES departments(tenant_id,id));
+CREATE TABLE equipment_types (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), section_id uuid NOT NULL, name text NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), FOREIGN KEY(tenant_id,section_id) REFERENCES sections(tenant_id,id));
+CREATE TABLE equipment (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), equipment_type_id uuid NOT NULL, code text NOT NULL, label text NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), UNIQUE(tenant_id,equipment_type_id,code), FOREIGN KEY(tenant_id,equipment_type_id) REFERENCES equipment_types(tenant_id,id));
+CREATE TABLE detail_fields (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), equipment_type_id uuid NOT NULL, key text NOT NULL, label text NOT NULL, kind text NOT NULL CHECK(kind IN ('text','dropdown')), required boolean NOT NULL DEFAULT false, options jsonb NOT NULL DEFAULT '[]', position int NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), UNIQUE(tenant_id,equipment_type_id,key), FOREIGN KEY(tenant_id,equipment_type_id) REFERENCES equipment_types(tenant_id,id));
+CREATE TABLE checklist_items (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), equipment_type_id uuid NOT NULL, text text NOT NULL, position int NOT NULL, active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), FOREIGN KEY(tenant_id,equipment_type_id) REFERENCES equipment_types(tenant_id,id));
+CREATE TABLE invites (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), code text NOT NULL UNIQUE, role text NOT NULL DEFAULT 'technician' CHECK(role='technician'), expires_at timestamptz NOT NULL, max_uses int NOT NULL CHECK(max_uses>0), uses int NOT NULL DEFAULT 0 CHECK(uses>=0), created_by uuid NOT NULL REFERENCES users(id), revoked boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE inspections (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES companies(id), equipment_id uuid NOT NULL, technician_user_id uuid NOT NULL REFERENCES users(id), started_at timestamptz NOT NULL, completed_at timestamptz NOT NULL, details jsonb NOT NULL, has_faults boolean NOT NULL, submitted_at timestamptz NOT NULL DEFAULT now(), created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id), FOREIGN KEY(tenant_id,equipment_id) REFERENCES equipment(tenant_id,id));
+CREATE TABLE inspection_items (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES companies(id), inspection_id uuid NOT NULL, checklist_item_id uuid, item_text text NOT NULL, position int NOT NULL, result text NOT NULL CHECK(result IN ('ok','not_ok','na')), comment text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), FOREIGN KEY(tenant_id,inspection_id) REFERENCES inspections(tenant_id,id), FOREIGN KEY(tenant_id,checklist_item_id) REFERENCES checklist_items(tenant_id,id));
+DO $$ DECLARE t text; BEGIN
+FOREACH t IN ARRAY ARRAY['departments','sections','equipment_types','equipment','detail_fields','checklist_items','invites','inspections','inspection_items'] LOOP
+EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY',t);
+EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY',t);
+EXECUTE format('CREATE POLICY tenant_isolation ON %I FOR ALL USING (tenant_id = nullif(current_setting(''app.tenant_id'',true),'''')::uuid) WITH CHECK (tenant_id = nullif(current_setting(''app.tenant_id'',true),'''')::uuid)',t);
+EXECUTE format('CREATE INDEX ON %I (tenant_id)',t);
+END LOOP; END $$;
+CREATE INDEX ON sections(tenant_id,department_id);
+CREATE INDEX ON equipment_types(tenant_id,section_id);
+CREATE INDEX ON equipment(tenant_id,equipment_type_id);
+CREATE INDEX ON detail_fields(tenant_id,equipment_type_id,position);
+CREATE INDEX ON checklist_items(tenant_id,equipment_type_id,position);
+CREATE INDEX ON inspection_items(tenant_id,inspection_id);
+CREATE INDEX ON inspections(tenant_id,submitted_at DESC);
+CREATE INDEX ON sessions(token_hash,expires_at);
+GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO dayly_app;
