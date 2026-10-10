@@ -15,7 +15,7 @@ Codex keeps this file current after every task. The PM and the orchestrator read
 | M1-01 | Skeleton, Compose, health endpoint, deploy pipeline | Review | 2026-10-10 | Scaffold, health contract/test, bundled fonts, isolated Compose and deploy CI created. Native Node 22 installed; Docker daemon unavailable, so live Caddy/Compose acceptance remains unverified. |
 | M1-02 | Schema, migrations, RLS, withTenant | Done | 2026-10-10 | Applied committed migration on empty PostgreSQL 16; forced RLS, cross-tenant composite FKs, runtime role/no-context isolation tests pass. |
 | M1-03 | Auth, sign-up, invites, technician join | Done | 2026-10-10 | Argon2id fallback ADR; admin/company signup, sessions, reusable invite/join, login and signup screens. Duplicate/expired/exhausted/wrong-password/scoped invite tests pass. |
-| M1-04 | Admin setup API and screens, demo seed | Todo | | |
+| M1-04 | Admin setup API and screens, demo seed | Done | 2026-10-10 | Six setup resources with CRUD/disable, ordered form/checklists, scoped parent checks, admin screens and local-only demo seed (3 units/2 fields/6 items). Typecheck, 5 database-backed tests and build pass. |
 | M1-05 | Tenant leak script | Todo | | |
 | M2-01 | Technician flow | Todo | | |
 | M2-02 | Submit inspection endpoint | Todo | | |
