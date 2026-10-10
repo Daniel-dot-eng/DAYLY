@@ -76,10 +76,10 @@ Never ask for, read, store, print or commit SSH keys, tokens, passwords or `.env
 
 ## Git workflow
 
-- Work on branch `mvp0`. Never push to `main`. The PM merges pull requests, and a merge to `main` triggers deployment.
+- Commit locally on branch `mvp0`. Never commit to `main` and never push. The PM pushes with GitHub Desktop, opens the pull request at each checkpoint, and merges it; a merge to `main` triggers deployment.
 - One commit per task; the message starts with the task ID (for example `M1-03: auth and invites`).
-- Open or update a pull request into `main` at each checkpoint (see `docs/START_HERE.md`).
-- If your GitHub access is read-only and you cannot push, stop immediately and tell the PM. Do not work around it.
+- Prepare the pull request title and description for the PM at each checkpoint (see `docs/START_HERE.md`).
+- Lack of push access is expected and is not a blocker. The PM handles all pushes and pull requests with GitHub Desktop.
 
 ## Working rules
 
