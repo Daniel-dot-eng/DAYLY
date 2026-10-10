@@ -1,10 +1,14 @@
-import { buildApp } from './app.js';
-import { readConfig } from './config.js';
-import {createDatabase} from './db.js';
-const config = readConfig();
-if(!process.env.DATABASE_URL)throw new Error('DATABASE_URL is required');
-const database=createDatabase(process.env.DATABASE_URL);
+import { buildApp } from "./app.js";
+import { readRuntimeConfig } from "./config.js";
+import { createDatabase } from "./db.js";
+const config = readRuntimeConfig();
+const database = createDatabase(config.DATABASE_URL);
 const app = buildApp(database);
-app.addHook('onClose',async()=>{await database.pool.end();});
-await app.listen({port:config.PORT,host:config.HOST});
-for (const signal of ['SIGINT','SIGTERM']) process.on(signal, () => { void app.close(); });
+app.addHook("onClose", async () => {
+  await database.pool.end();
+});
+await app.listen({ port: config.PORT, host: config.HOST });
+for (const signal of ["SIGINT", "SIGTERM"])
+  process.on(signal, () => {
+    void app.close();
+  });

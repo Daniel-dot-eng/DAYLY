@@ -1,14 +1,32 @@
 {
-  "name": "dayly", "private": true, "version": "0.0.1", "engines": { "node": ">=22 <23" },
+  "name": "dayly",
+  "private": true,
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "migrate": "tsx scripts/migrate.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:leak": "tsx scripts/leak-test.ts",
+    "test:leak:negative": "tsx scripts/leak-negative-control.ts",
+    "test:browser": "playwright test",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p tsconfig.scripts.json",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "dev:api": "npm run dev -w @dayly/api", "dev:web": "npm run dev -w @dayly/web"
+    "dev:api": "npm run dev -w @dayly/api",
+    "dev:web": "npm run dev -w @dayly/web"
   },
-  "devDependencies": { "typescript": "^5.7.3", "tsx": "^4.19.2", "@types/node": "^22.10.0" }
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^22.10.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
 }

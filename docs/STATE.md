@@ -3,7 +3,7 @@
 Codex keeps this file current after every task. The PM and the orchestrator read it to see progress.
 
 **Current batch:** A
-**Current checkpoint:** none
+**Current checkpoint:** C1 — awaiting PM review; do not start Batch B
 **Last updated:** 2026-10-10
 **Branch:** mvp0
 
@@ -16,7 +16,7 @@ Codex keeps this file current after every task. The PM and the orchestrator read
 | M1-02 | Schema, migrations, RLS, withTenant | Done | 2026-10-10 | Applied committed migration on empty PostgreSQL 16; forced RLS, cross-tenant composite FKs, runtime role/no-context isolation tests pass. |
 | M1-03 | Auth, sign-up, invites, technician join | Done | 2026-10-10 | Argon2id fallback ADR; admin/company signup, sessions, reusable invite/join, login and signup screens. Duplicate/expired/exhausted/wrong-password/scoped invite tests pass. |
 | M1-04 | Admin setup API and screens, demo seed | Done | 2026-10-10 | Six setup resources with CRUD/disable, ordered form/checklists, scoped parent checks, admin screens and local-only demo seed (3 units/2 fields/6 items). Typecheck, 5 database-backed tests and build pass. |
-| M1-05 | Tenant leak script | Todo | | |
+| M1-05 | Tenant leak script | Done | 2026-10-10 | 35 data routes covered from route registry, 9 business-table no-context checks, unchanged tenant-A snapshots and policy-break negative control pass. CI leak gate installed. C1 browser flow passes. |
 | M2-01 | Technician flow | Todo | | |
 | M2-02 | Submit inspection endpoint | Todo | | |
 | M2-03 | Admin submissions and faults | Todo | | |
@@ -43,8 +43,11 @@ Assumptions: design frontmatter tokens are canonical where prose differs; produc
 
 ## Known issues
 
-(None yet.)
+- M1-01 live Docker/Caddy and arm64 image-build acceptance not run: Docker daemon unavailable. Compose config and shell/YAML syntax validated; real PostgreSQL 16 tests pass natively.
+- Seven build-tool audit findings in Tailwind 3 parser dependencies remain (5 high, 2 moderate); runtime dependency audit clean. See QUESTIONS.md. Hardening is Batch B.
 
 ## Needs from the PM
 
-(Codex lists anything blocked on the PM here: access, secrets, DNS, settings.)
+- Push local mvp0 with GitHub Desktop, paste docs/PR_C1.md into a PR targeting main, review C1, then authorize Batch B.
+- Before deployment: set VM_HOST, VM_USER, VM_SSH_KEY, VM_HOST_KEY in GitHub Actions yourself; create production .env on the VM; confirm DNS and Caddy ports. No secrets requested by or shared with the builder.
+- Run full Compose/Caddy and arm64 image acceptance on a machine with a running Docker daemon before merging for deployment.

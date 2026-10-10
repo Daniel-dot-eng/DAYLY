@@ -1,13 +1,202 @@
-import React from 'react';
-import {createRoot} from 'react-dom/client';
-import {BrowserRouter,Routes,Route,Link,Navigate,useNavigate} from 'react-router-dom';
-import {QueryClient,QueryClientProvider,useQuery} from '@tanstack/react-query';
-import './style.css';
-import {AuthForm} from './AuthForm';
-import {api} from './api';
-import {Setup} from './Setup';
-const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
-function Welcome(){return <main className="welcome"><div className="wordmark">✓ <span>DAYLY</span></div><h1>Welcome to DAYLY</h1><p>Choose how you’d like to get started today</p><section className="role selected"><h2>I'm setting up my company <span className="badge">Admin</span></h2><p>Create your workspace, configure equipment checklists, and invite technicians.</p><Link className="button" to="/signup">Continue as Admin →</Link></section><section className="role"><h2>I'm joining my team <span className="badge neutral">Technician</span></h2><p>Use the invite code from your supervisor to join your team.</p><Link className="button secondary" to="/join">Join with Invite Code →</Link></section><p>Already have an account? <Link to="/login">Log in</Link></p></main>;}
-function Workspace(){const navigate=useNavigate();const [area,setArea]=React.useState('Setup');const me=useQuery({queryKey:['me'],queryFn:()=>api<{name:string;role:string;companyName:string;companyCode:string}>('/me')});if(me.isPending)return <main role="status">Loading workspace…</main>;if(me.isError)return <Navigate to="/login" replace/>;return <main className="workspace"><header><div className="wordmark">✓ DAYLY</div><strong>{me.data.companyName}</strong><button className="secondary" onClick={()=>{void api('/auth/logout','POST').then(()=>{client.clear();navigate('/login');});}}>Log out</button></header><h1>{me.data.role==='admin'?'Company setup':'Your team'}</h1><p>Signed in as {me.data.name}. Company code: <strong>{me.data.companyCode}</strong></p>{me.data.role==='admin'?<><nav aria-label="Admin areas">{['Setup','Submissions','Faults','Invites'].map(a=><button key={a} className="secondary" onClick={()=>setArea(a)} aria-current={area===a?'page':undefined}>{a}</button>)}</nav>{area==='Setup'?<Setup/>:area==='Invites'?<Invites/>:<p>{area} is scheduled for Batch B.</p>}</>:<p>Your account is ready. Inspection flow is scheduled for Batch B.</p>}</main>;}
-function Invites(){const query=useQuery({queryKey:['invites'],queryFn:()=>api<{id:string;code:string;uses:number;max_uses:number;expires_at:string;revoked:boolean}[]>('/invites')});const [error,setError]=React.useState('');return <section className="panel"><h2>Technician invites</h2><button onClick={()=>{setError('');void api('/invites','POST',{}).then(()=>query.refetch()).catch(e=>setError(e.message));}}>Create invite</button>{error?<p role="alert">{error}</p>:null}{query.isPending?<p role="status">Loading invites…</p>:query.isError?<p role="alert">Unable to load invites</p>:<ul>{query.data.map(row=><li key={row.id}><strong>{row.code}</strong> · {row.uses}/{row.max_uses} uses · expires {new Date(row.expires_at).toLocaleDateString()} {row.revoked?'Revoked':<button className="secondary" onClick={()=>{void api(`/invites/${row.id}`,'DELETE').then(()=>query.refetch()).catch(e=>setError(e.message));}}>Revoke</button>}</li>)}</ul>}</section>;}
-createRoot(document.getElementById('root')!).render(<React.StrictMode><QueryClientProvider client={client}><BrowserRouter><Routes><Route path="/" element={<Welcome/>}/><Route path="/signup" element={<AuthForm mode="signup"/>}/><Route path="/join" element={<AuthForm mode="join"/>}/><Route path="/login" element={<AuthForm mode="login"/>}/><Route path="/admin/*" element={<Workspace/>}/><Route path="/t/*" element={<Workspace/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes></BrowserRouter></QueryClientProvider></React.StrictMode>);
+import React from "react";
+import { createRoot } from "react-dom/client";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
+import "./style.css";
+import { AuthForm } from "./AuthForm";
+import { api } from "./api";
+import { Setup } from "./Setup";
+const client = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+function Welcome() {
+  return (
+    <main className="welcome">
+      <div className="wordmark">
+        ✓ <span>DAYLY</span>
+      </div>
+      <h1>Welcome to DAYLY</h1>
+      <p>Choose how you’d like to get started today</p>
+      <section className="role selected">
+        <h2>
+          I'm setting up my company <span className="badge">Admin</span>
+        </h2>
+        <p>
+          Create your workspace, configure equipment checklists, and invite
+          technicians.
+        </p>
+        <Link className="button" to="/signup">
+          Continue as Admin →
+        </Link>
+      </section>
+      <section className="role">
+        <h2>
+          I'm joining my team <span className="badge neutral">Technician</span>
+        </h2>
+        <p>Use the invite code from your supervisor to join your team.</p>
+        <Link className="button secondary" to="/join">
+          Join with Invite Code →
+        </Link>
+      </section>
+      <p>
+        Already have an account? <Link to="/login">Log in</Link>
+      </p>
+    </main>
+  );
+}
+function Workspace() {
+  const navigate = useNavigate();
+  const [area, setArea] = React.useState("Setup");
+  const me = useQuery({
+    queryKey: ["me"],
+    queryFn: () =>
+      api<{
+        name: string;
+        role: string;
+        companyName: string;
+        companyCode: string;
+      }>("/me"),
+  });
+  if (me.isPending) return <main role="status">Loading workspace…</main>;
+  if (me.isError) return <Navigate to="/login" replace />;
+  return (
+    <main className="workspace">
+      <header>
+        <div className="wordmark">✓ DAYLY</div>
+        <strong>{me.data.companyName}</strong>
+        <button
+          className="secondary"
+          onClick={() => {
+            void api("/auth/logout", "POST").then(() => {
+              client.clear();
+              navigate("/login");
+            });
+          }}
+        >
+          Log out
+        </button>
+      </header>
+      <h1>{me.data.role === "admin" ? "Company setup" : "Your team"}</h1>
+      <p>
+        Signed in as {me.data.name}. Company code:{" "}
+        <strong>{me.data.companyCode}</strong>
+      </p>
+      {me.data.role === "admin" ? (
+        <div className="admin-layout">
+          <nav aria-label="Admin areas">
+            {["Setup", "Submissions", "Faults", "Invites"].map((a) => (
+              <button
+                key={a}
+                className="secondary"
+                onClick={() => setArea(a)}
+                aria-current={area === a ? "page" : undefined}
+              >
+                {a}
+              </button>
+            ))}
+          </nav>
+          <div>
+            {area === "Setup" ? (
+              <Setup />
+            ) : area === "Invites" ? (
+              <Invites />
+            ) : (
+              <p>{area} is scheduled for Batch B.</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p>Your account is ready. Inspection flow is scheduled for Batch B.</p>
+      )}
+    </main>
+  );
+}
+function Invites() {
+  const query = useQuery({
+    queryKey: ["invites"],
+    queryFn: () =>
+      api<
+        {
+          id: string;
+          code: string;
+          uses: number;
+          max_uses: number;
+          expires_at: string;
+          revoked: boolean;
+        }[]
+      >("/invites"),
+  });
+  const [error, setError] = React.useState("");
+  return (
+    <section className="panel">
+      <h2>Technician invites</h2>
+      <button
+        onClick={() => {
+          setError("");
+          void api("/invites", "POST", {})
+            .then(() => query.refetch())
+            .catch((e) => setError(e.message));
+        }}
+      >
+        Create invite
+      </button>
+      {error ? <p role="alert">{error}</p> : null}
+      {query.isPending ? (
+        <p role="status">Loading invites…</p>
+      ) : query.isError ? (
+        <p role="alert">Unable to load invites</p>
+      ) : (
+        <ul>
+          {query.data.map((row) => (
+            <li key={row.id}>
+              <strong>{row.code}</strong> · {row.uses}/{row.max_uses} uses ·
+              expires {new Date(row.expires_at).toLocaleDateString()}{" "}
+              {row.revoked ? (
+                "Revoked"
+              ) : (
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    void api(`/invites/${row.id}`, "DELETE")
+                      .then(() => query.refetch())
+                      .catch((e) => setError(e.message));
+                  }}
+                >
+                  Revoke
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={client}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/signup" element={<AuthForm mode="signup" />} />
+          <Route path="/join" element={<AuthForm mode="join" />} />
+          <Route path="/login" element={<AuthForm mode="login" />} />
+          <Route path="/admin/*" element={<Workspace />} />
+          <Route path="/t/*" element={<Workspace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </React.StrictMode>,
+);

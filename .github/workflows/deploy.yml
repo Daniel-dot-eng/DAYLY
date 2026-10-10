@@ -9,6 +9,19 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: postgres
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://dayly_app@127.0.0.1:5432/dayly_test
+      MIGRATION_DATABASE_URL: postgresql://dayly_owner@127.0.0.1:5432/dayly_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,8 +29,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Initialize isolated test database
+        run: psql postgresql://postgres@127.0.0.1:5432/postgres -v ON_ERROR_STOP=1 -c "CREATE ROLE dayly_owner LOGIN NOSUPERUSER NOBYPASSRLS;" -c "CREATE ROLE dayly_app LOGIN NOSUPERUSER NOBYPASSRLS;" -c "CREATE DATABASE dayly_test OWNER dayly_owner;"
+      - run: npm run migrate
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:leak
       - run: npm run build
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
